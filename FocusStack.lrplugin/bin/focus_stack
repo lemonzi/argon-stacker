@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Open Focus Stack Pro — Standalone CLI & GUI Launcher
+set -e
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PYTHON="${DIR}/venv/bin/python3"
+
+if [ ! -x "${PYTHON}" ]; then
+    PYTHON="$(which python3)"
+fi
+
+exec "${PYTHON}" "${DIR}/py_focus_stack/cli.py" "$@"

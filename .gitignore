@@ -1,0 +1,54 @@
+# ==============================================================================
+# Open Focus Stack — Git Ignore Rules
+# ==============================================================================
+
+# Local Scratch & Research Experiments
+scratch/
+test_stack/
+
+# Internal Notes, Logs & Temporary Diagnostics
+notes/
+RUNNING_NOTES.md
+*.log
+/tmp/focus_stack*
+
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+FocusStack.lrplugin/bin/venv/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# macOS / OS Artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editor Settings
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Large External Binary Bundles (Legacy C++ Engine fallback)
+# Note: Install via 'brew install focus-stack' if legacy engine is desired.
+FocusStack.lrplugin/bin/focus-stack/
+
+# Rendered Stacks & Test Outputs
+*_stacked.tif
+*_stacked.tiff
+*_stacked.jpg
+*_stacked.jpeg

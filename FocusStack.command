@@ -1,0 +1,1 @@
+FocusStack.lrplugin/FocusStack.command

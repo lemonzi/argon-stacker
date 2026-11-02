@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Open Focus Stack Pro (16-Bit Multi-Channel Engine)
+Argon Stacker (16-Bit Multi-Channel Engine)
 CLI & Stacking Orchestrator with Streaming Architecture
 Supports both Lightroom Classic plugin execution and standalone desktop usage.
 """
@@ -164,7 +164,7 @@ def native_choose_files_or_folder():
             app = NSApplication.sharedApplication()
             app.activateIgnoringOtherApps_(True)
             panel = NSOpenPanel.openPanel()
-            panel.setTitle_("Open Focus Stack Pro — Select Photos or Folder")
+            panel.setTitle_("Argon Stacker — Select Photos or Folder")
             panel.setMessage_("Select a photoshoot folder, or choose individual bracketed macro photos:")
             panel.setCanChooseFiles_(True)
             panel.setCanChooseDirectories_(True)
@@ -755,7 +755,7 @@ def build_worker_for_files(files, requested_output=None, crop=True):
     return interactive_worker, output_path
 
 def main():
-    parser = argparse.ArgumentParser(description="Open Focus Stack Pro — 16-Bit Multi-Channel Engine")
+    parser = argparse.ArgumentParser(description="Argon Stacker — 16-Bit Multi-Channel Engine")
     parser.add_argument("files", nargs="*", help="Input image files or directory containing bracketed photos")
     parser.add_argument("--output", "-o", default=None, help="Output stacked 16-bit TIFF or JPEG path")
     parser.add_argument("--interactive", action="store_true", default=None, help="Launch interactive native desktop GUI")
@@ -790,7 +790,7 @@ def main():
             sys.exit(1)
 
         print("============================================================")
-        print("Open Focus Stack Pro — Interactive Workspace")
+        print("Argon Stacker — Interactive Workspace")
         print("No files provided via CLI. Opening native window picker...")
         print("============================================================")
 
@@ -860,7 +860,7 @@ def main():
     is_jpeg_source = first_ext in ('.jpg', '.jpeg')
     fmt_label = "JPEG" if is_jpeg_source else "16-Bit TIFF"
     print(f"============================================================")
-    print(f"Open Focus Stack Pro — {fmt_label} Fusion Engine")
+    print(f"Argon Stacker — {fmt_label} Fusion Engine")
     print(f"Found {len(files)} bracketed {fmt_label} frames in sequence")
     print(f"Target Output: {args.output}")
     print(f"Mode: {'Interactive Native GUI' if is_interactive else 'Headless Batch Render'}")

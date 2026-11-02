@@ -1,28 +1,28 @@
 return {
     LrSdkVersion = 11.0,
     LrSdkMinimumVersion = 6.0,
-    LrToolkitIdentifier = 'com.antigravity.openfocusstack',
-    LrPluginName = 'Open Focus Stack',
-    LrPluginInfoUrl = 'https://github.com/PetteriAimonen/focus-stack',
+    LrToolkitIdentifier = 'com.lemonzi.argonstacker',
+    LrPluginName = 'Argon Stacker',
+    LrPluginInfoUrl = 'https://github.com/lemonzi/argon-stacker',
 
     LrExportServiceProvider = {
-        title = "Open Focus Stack",
+        title = "Argon Stacker",
         file = "FocusStackExportServiceProvider.lua",
     },
 
     LrExportMenuItems = {
         {
-            title = "Focus Stack with Open Focus Stack",
+            title = "Focus Stack with Argon Stacker",
             file = "FocusStackMenuAction.lua",
         },
     },
 
     LrLibraryMenuItems = {
         {
-            title = "Focus Stack with Open Focus Stack",
+            title = "Focus Stack with Argon Stacker",
             file = "FocusStackMenuAction.lua",
         },
     },
 
-    VERSION = { major = 1, minor = 0, revision = 0, build = 43 },
+    VERSION = { major = 1, minor = 0, revision = 0, build = 44 },
 }

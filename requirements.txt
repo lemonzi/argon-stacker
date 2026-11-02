@@ -1,4 +1,4 @@
-# Core dependencies for Open Focus Stack 16-bit Engine
+# Core dependencies for Argon Stacker 16-bit Engine
 numpy>=1.24.0
 scipy>=1.10.0
 opencv-python-headless>=4.8.0

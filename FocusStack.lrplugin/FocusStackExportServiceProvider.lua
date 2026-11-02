@@ -61,8 +61,12 @@ local function ensurePresetInstalled()
     local appData = LrPathUtils.getStandardFilePath('appData')
     if appData and _PLUGIN and _PLUGIN.path then
         local targetDir = LrPathUtils.child(appData, "Export Presets/User Presets")
-        local targetFile = LrPathUtils.child(targetDir, "Open Focus Stack.lrtemplate")
-        local sourceFile = LrPathUtils.child(_PLUGIN.path, "Export Presets/Open Focus Stack.lrtemplate")
+        local targetFile = LrPathUtils.child(targetDir, "Argon Stacker.lrtemplate")
+        local sourceFile = LrPathUtils.child(_PLUGIN.path, "Export Presets/Argon Stacker.lrtemplate")
+        local legacyFile = LrPathUtils.child(targetDir, "Open Focus Stack.lrtemplate")
+        if LrFileUtils.exists(legacyFile) then
+            LrFileUtils.delete(legacyFile)
+        end
         if LrFileUtils.exists(sourceFile) then
             if not LrFileUtils.exists(targetDir) then
                 LrFileUtils.createAllDirectories(targetDir)
@@ -153,7 +157,7 @@ exportServiceProvider.sectionsForTopOfDialog = function(f, propertyTable)
 
     return {
         {
-            title = "Open Focus Stacking Settings",
+            title = "Argon Stacker Settings",
 
             f:row {
                 f:static_text {
@@ -411,7 +415,7 @@ exportServiceProvider.processRenderedPhotos = function(functionContext, exportCo
     if not venvPy or not cliPy then
         progressScope:done()
         LrDialogs.message(
-            "Open Focus Stack Not Ready",
+            "Argon Stacker Not Ready",
             "Could not locate the Python stacking engine inside the plugin bundle.\nPlease ensure ./setup.sh was run to initialize FocusStack.lrplugin/bin/venv.",
             "critical"
         )

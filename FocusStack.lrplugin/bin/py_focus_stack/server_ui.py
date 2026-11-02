@@ -25,7 +25,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Open Focus Stack Pro — EG-MSD Interactive Tuning</title>
+<title>Argon Stacker — EG-MSD Interactive Tuning</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>">
 <style>
   :root {
@@ -1296,7 +1296,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         <path d="M14 44 L32 54 L50 44" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <h2 class="drop-title">Open Focus Stack Pro</h2>
+    <h2 class="drop-title">Argon Stacker</h2>
     <div class="drop-tagline">16-Bit Multi-Channel Fusion Engine</div>
     <div class="drop-hero-text">Drag &amp; Drop Bracketed Photos or Folder Here</div>
     <div class="drop-hint">Drop an entire photo folder or multiple bracketed focus frames to stack</div>
@@ -1329,7 +1329,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
       <span class="init-logo-icon">📷</span>
       <div class="init-spinner"></div>
     </div>
-    <h2 class="init-title">Open Focus Stack Pro</h2>
+    <h2 class="init-title">Argon Stacker</h2>
     <div class="init-sub">16-Bit Multi-Channel Fusion Engine</div>
     <div class="init-progress-track">
       <div id="init-progress-bar" class="init-progress-fill"></div>
@@ -1346,7 +1346,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <div id="brush-cursor"><div id="brush-cursor-inner"></div></div>
 
 <div id="sidebar">
-  <h1>Open Focus Stack <span class="badge">EG-MSD 16-Bit Pro</span></h1>
+  <h1>Argon Stacker <span class="badge">EG-MSD 16-Bit</span></h1>
 
   <!-- Utility Actions (Dev Mode & Shortcuts) -->
   <div style="display:flex; gap:8px;">
@@ -4516,7 +4516,7 @@ def run_interactive_server(worker_or_get_preview=None, render_final_fn=None, sta
 
         try:
             window = webview.create_window(
-                title="Open Focus Stack Pro",
+                title="Argon Stacker",
                 url=url,
                 width=1340,
                 height=880,

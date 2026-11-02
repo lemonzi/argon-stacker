@@ -26,7 +26,7 @@ Argon helped design, benchmark, and optimize a modern mathematical pipeline that
 - **Low Memory Footprint**: 2-pass disk-backed streaming pipeline executes large focus sweeps ($9504 \times 6336$) in $< 2.5\text{ GB}$ RAM.
 - **Interactive Web App**: Real-time 100% zoom crop loupe, focus peaking overlays, and instant preview parameter tweaking at `http://127.0.0.1:8765`.
 - **Integrated Retouching Brush**: Multi-band Laplacian pyramid blending allows seamlessly painting sharp details from specific bracket frames with full undo/redo.
-- **1-Click Lightroom Classic Plugin**: Select bracketed frames in Lightroom Classic, right-click $\rightarrow$ **Export** $\rightarrow$ **Open Focus Stack**. The stacked master image is automatically imported and stacked directly above source frames in your catalog.
+- **1-Click Lightroom Classic Plugin**: Select bracketed frames in Lightroom Classic, right-click $\rightarrow$ **Export** $\rightarrow$ **Argon Stacker**. The stacked master image is automatically imported and stacked directly above source frames in your catalog.
 - **Standalone CLI & macOS Launcher**: Run headlessly from the terminal, integrate into automated scripts, or double-click `FocusStack.command`.
 
 ---
@@ -57,12 +57,12 @@ This automatically provisions an isolated virtual environment (`numpy`, `scipy`,
 
 ### Method A: Lightroom 1-Click Context Menu (Recommended)
 1. In the Lightroom **Library** grid, select your bracketed photos.
-2. **Right-click** on any selected frame $\rightarrow$ **Export** $\rightarrow$ **Open Focus Stack**.
+2. **Right-click** on any selected frame $\rightarrow$ **Export** $\rightarrow$ **Argon Stacker**.
 3. Lightroom exports 16-bit ProPhotoRGB TIFFs in the background, launches the stacking engine, and imports the finished `_stacked.tif` master image right above your originals in the grid.
 
 ### Method B: Via Export Dialog (To Customize Settings)
 1. Select your bracketed photos and press `Shift + Cmd + E` (or **File $\rightarrow$ Export...**).
-2. In the **Export To:** dropdown at the top, select **Open Focus Stack**.
+2. In the **Export To:** dropdown at the top, select **Argon Stacker**.
 3. Adjust settings:
    - **Interactive Preview Mode**: Launches the web GUI to review alignment and adjust parameters before rendering.
    - **Background Polarity Mode**: `Auto`, `Dark` (for bright subjects on dark backgrounds), `Bright` (for dark subjects on high-key backgrounds), or `Energy`.

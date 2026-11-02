@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Open Focus Stack Pro — Standalone Environment Bootstrap
+# Argon Stacker — Standalone Environment Bootstrap
 # Run this script if copying this plugin to a new Mac without Python dependencies installed.
 set -e
 
@@ -8,7 +8,7 @@ PLUGIN_DIR="$( dirname "$DIR" )"
 VENV_DIR="$DIR/venv"
 
 echo "=========================================================="
-echo "Open Focus Stack Pro — Standalone Environment Installer"
+echo "Argon Stacker — Standalone Environment Installer"
 echo "=========================================================="
 
 PYTHON_BIN=""
@@ -38,5 +38,5 @@ echo "Installing required packages (numpy, scipy, opencv, pillow, tifffile, pywe
 "$VENV_DIR/bin/pip" install numpy scipy opencv-python-headless pillow tifffile pywebview
 
 echo "=========================================================="
-echo "✅ Open Focus Stack is packaged and ready to run!"
+echo "✅ Argon Stacker is packaged and ready to run!"
 echo "=========================================================="

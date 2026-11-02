@@ -19,7 +19,7 @@ LrTasks.startAsyncTask(function()
 
     if not targetPhotos or #targetPhotos < 2 then
         LrDialogs.message(
-            "Open Focus Stack",
+            "Argon Stacker",
             "Please select at least 2 bracketed photos in the Lightroom grid to focus stack.",
             "info"
         )
@@ -81,8 +81,8 @@ LrTasks.startAsyncTask(function()
     end
 
     local exportSettings = {
-        LR_exportServiceProvider = "com.antigravity.openfocusstack",
-        LR_exportServiceProviderTitle = "Open Focus Stack",
+        LR_exportServiceProvider = "com.lemonzi.argonstacker",
+        LR_exportServiceProviderTitle = "Argon Stacker",
         LR_format = "TIFF",
         LR_export_format = "TIFF",
         LR_export_colorSpace = "ProPhotoRGB",

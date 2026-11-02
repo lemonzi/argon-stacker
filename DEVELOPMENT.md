@@ -1,12 +1,12 @@
 # Developer Instructions & Architecture Guide
 
-Welcome to the **Open Focus Stack** development guide. This document provides technical instructions for developers, contributors, and maintainers working on the focus stacking engine and Adobe Lightroom Classic plugin.
+Welcome to the **Argon Stacker** development guide. This document provides technical instructions for developers, contributors, and maintainers working on the focus stacking engine and Adobe Lightroom Classic plugin.
 
 ---
 
 ## Architecture Overview
 
-Open Focus Stack is designed with a decoupled 3-tier architecture:
+Argon Stacker is designed with a decoupled 3-tier architecture:
 
 ```
 +--------------------------------------------------------------+
@@ -122,7 +122,7 @@ FocusStack.lrplugin/
 ├── FocusStackMenuAction.lua           # 1-click right-click context menu action
 ├── RegisterExistingPhoto.lua          # Menu item to ingest existing stacked TIFFs
 ├── Export Presets/
-│   └── Open Focus Stack.lrtemplate    # Default export preset (16-bit ProPhotoRGB)
+│   └── Argon Stacker.lrtemplate       # Default export preset (16-bit ProPhotoRGB)
 ├── FocusStack.command                 # Double-clickable macOS launcher
 └── bin/
     ├── focus_stack                    # Standalone shell wrapper
@@ -139,7 +139,7 @@ FocusStack.lrplugin/
 
 ### Reloading the Plugin in Lightroom Classic
 1. In Lightroom Classic, open **File $\rightarrow$ Plug-in Manager** (`Opt + Cmd + ,`).
-2. Select **Open Focus Stack**.
+2. Select **Argon Stacker**.
 3. Click **Reload Plug-in**.
 
 ### Debugging Logs

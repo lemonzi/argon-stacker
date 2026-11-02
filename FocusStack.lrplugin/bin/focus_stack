@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Open Focus Stack Pro — Standalone CLI & GUI Launcher
+# Argon Stacker — Standalone CLI & GUI Launcher
 set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

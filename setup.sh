@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Open Focus Stack — Developer & Environment Setup
+# Argon Stacker — Developer & Environment Setup
 set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

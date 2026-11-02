@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Open Focus Stack Pro — 1-Click macOS Double-Clickable Launcher
+# Argon Stacker — 1-Click macOS Double-Clickable Launcher
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
   DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"

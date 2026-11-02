@@ -38,6 +38,88 @@ SUPPORTED_EXTS = ('.tif', '.tiff', '.jpg', '.jpeg', '.png', '.dng', '.arw', '.cr
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
 
+def get_photo_capture_timestamp(filepath):
+    """
+    Extracts high-precision capture timestamp (DateTimeOriginal/DateTime + subseconds)
+    from EXIF metadata across JPEG, TIFF, DNG, and RAW formats.
+    Returns sortable string (e.g. '2026:10:11 12:39:20.164') or None.
+    """
+    try:
+        from PIL import Image
+        from PIL.ExifTags import IFD
+        with Image.open(filepath) as im:
+            ex = im.getexif()
+            if ex:
+                ex_ifd = ex.get_ifd(IFD.Exif)
+                dto = ex_ifd.get(36867) or ex_ifd.get(36868) or ex.get(306)
+                if dto:
+                    sub = str(ex_ifd.get(37521) or ex_ifd.get(37522) or ex_ifd.get(37520) or '0').strip('\x00')
+                    return f"{str(dto).strip(chr(0))}.{sub.zfill(3)}"
+    except Exception:
+        pass
+
+    try:
+        import tifffile
+        with tifffile.TiffFile(filepath) as tf:
+            for page in tf.pages:
+                for tag in page.tags:
+                    if tag.code in (36867, 36868, 306) or tag.name in ('DateTimeOriginal', 'DateTimeDigitized', 'DateTime'):
+                        val = str(tag.value).strip('\x00')
+                        if val:
+                            return val
+    except Exception:
+        pass
+
+    return None
+
+def check_sort_order_discrepancy(files):
+    """
+    Compares filename natural sort order vs EXIF photo taken timestamp sort order.
+    Returns:
+      discrepancy (bool): True if EXIF timestamps exist and disagree with filename sort.
+      files_by_name (list): Files sorted by filename natural sort.
+      files_by_exif (list): Files sorted by EXIF timestamp.
+      details (dict): Structured conflict metadata for UI and logs.
+    """
+    if len(files) < 2:
+        return False, list(files), list(files), {}
+
+    files_by_name = sorted(files, key=natural_sort_key)
+    timestamps = {}
+    valid_count = 0
+    for f in files_by_name:
+        ts = get_photo_capture_timestamp(f)
+        timestamps[f] = ts
+        if ts is not None:
+            valid_count += 1
+
+    if valid_count < 2:
+        return False, files_by_name, files_by_name, {}
+
+    files_by_exif = sorted(
+        files_by_name,
+        key=lambda f: (
+            timestamps[f] is None,
+            timestamps[f] if timestamps[f] is not None else "",
+            natural_sort_key(f)
+        )
+    )
+
+    disagree = (files_by_name != files_by_exif)
+    details = {
+        "disagree": disagree,
+        "count": len(files),
+        "files_by_name": [
+            {"path": f, "basename": os.path.basename(f), "timestamp": timestamps.get(f) or "No EXIF timestamp"}
+            for f in files_by_name
+        ],
+        "files_by_exif": [
+            {"path": f, "basename": os.path.basename(f), "timestamp": timestamps.get(f) or "No EXIF timestamp"}
+            for f in files_by_exif
+        ]
+    }
+    return disagree, files_by_name, files_by_exif, details
+
 def discover_input_files(file_args):
     """
     Expands directories, wildcards, or handles lists of file paths.
@@ -688,6 +770,7 @@ def main():
     parser.add_argument("--bg-mode", choices=["auto", "dark", "bright", "energy"], default="auto", help="Background polarity mode: auto, dark, bright, or energy (default: auto)")
     parser.add_argument("--crop", action="store_true", default=True, help="Crop output to valid overlapping area (removes warped edges)")
     parser.add_argument("--no-crop", dest="crop", action="store_false")
+    parser.add_argument("--sort-by", choices=["auto", "name", "exif"], default="auto", help="Frame ordering mode: auto (prompt if filename and EXIF disagree), name (sort by filename), exif (sort by capture timestamp)")
     parser.add_argument("--lightroom", action="store_true", default=False, help="Lightroom Classic plugin export mode")
 
     args = parser.parse_args()
@@ -723,6 +806,53 @@ def main():
 
         print(f"Selected {len(files)} bracketed photos from: {chosen[0]}")
 
+    # Inspect EXIF photo taken timestamp sort order vs filename sort order
+    disagree, files_by_name, files_by_exif, sort_details = check_sort_order_discrepancy(files)
+    order_conflict = None
+    on_resolve_order = None
+
+    if args.sort_by == "exif":
+        files = files_by_exif
+        print(f"Notice: Applied EXIF capture timestamp ordering across {len(files)} frames.")
+    elif args.sort_by == "name":
+        files = files_by_name
+    elif disagree:
+        if not is_interactive:
+            print("\n⚠️  WARNING: EXIF photo taken timestamps and filename sort order disagree!")
+            print("----------------------------------------------------------------------")
+            print(f"{'#':<4} {'Filename Order':<32} | {'EXIF Timestamp Order':<32}")
+            print("----------------------------------------------------------------------")
+            for i in range(min(5, len(files_by_name))):
+                fn = f"{os.path.basename(files_by_name[i])} ({sort_details['files_by_name'][i]['timestamp']})"
+                fe = f"{os.path.basename(files_by_exif[i])} ({sort_details['files_by_exif'][i]['timestamp']})"
+                print(f"{i+1:<4} {fn:<32} | {fe:<32}")
+            if len(files_by_name) > 5:
+                print(f"... and {len(files_by_name) - 5} more frames.")
+            print("----------------------------------------------------------------------")
+            if sys.stdin.isatty():
+                try:
+                    ans = input("How would you like to order the files? [1 = EXIF Timestamp (Recommended), 2 = Filename Order] (default 1): ").strip()
+                    if ans == "2":
+                        files = files_by_name
+                        print("Applying filename order.")
+                    else:
+                        files = files_by_exif
+                        print("Applying EXIF capture timestamp order.")
+                except (KeyboardInterrupt, EOFError):
+                    sys.exit(0)
+            else:
+                print("Notice: Non-interactive batch mode. Defaulting to EXIF capture timestamp order.")
+                files = files_by_exif
+        else:
+            order_conflict = sort_details
+            files = files_by_name
+            def on_resolve_order(choice):
+                chosen_files = files_by_exif if choice == 'exif' else files_by_name
+                w_fn, _ = build_worker_for_files(chosen_files, requested_output=args.output, crop=args.crop)
+                return w_fn
+    else:
+        files = files_by_name
+
     interactive_worker, resolved_output = build_worker_for_files(files, requested_output=args.output, crop=args.crop)
     args.output = resolved_output
 
@@ -745,7 +875,9 @@ def main():
             start_port=8765,
             is_dropzone=False,
             is_lightroom=is_lightroom,
-            default_output_path=args.output
+            default_output_path=args.output,
+            order_conflict=order_conflict,
+            on_resolve_order=on_resolve_order
         )
         if cancelled:
             print("Interactive session cancelled by user.")

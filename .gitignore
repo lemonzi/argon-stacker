@@ -43,10 +43,6 @@ Thumbs.db
 *.sublime-project
 *.sublime-workspace
 
-# Large External Binary Bundles (Legacy C++ Engine fallback)
-# Note: Install via 'brew install focus-stack' if legacy engine is desired.
-FocusStack.lrplugin/bin/focus-stack/
-
 # Rendered Stacks & Test Outputs
 *_stacked.tif
 *_stacked.tiff

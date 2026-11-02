@@ -97,14 +97,10 @@ LrTasks.startAsyncTask(function()
         LR_addToCatalog = false,
         reimport_stackWithOriginal = false,
         outputSuffix = "_stacked",
-        usePythonEngine = true,
         interactiveMode = true,
-        batchSize = "8",
+        bgMode = "auto",
         deleteIntermediates = true,
         stackAboveOriginal = true,
-        fullResolutionAlign = true,
-        globalAlign = true,
-        preserveExposure = true,
         invokedFromMenuAction = true,
     }
 

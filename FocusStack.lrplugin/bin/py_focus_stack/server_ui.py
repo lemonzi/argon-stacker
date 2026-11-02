@@ -56,6 +56,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     padding: 18px;
     gap: 14px;
     overflow-y: auto;
+    flex-shrink: 0;
   }
   h1 { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
   .badge { background: #2563eb22; color: #60a5fa; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 500; }
@@ -202,6 +203,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     border-radius: 8px;
     overflow: hidden;
     transition: all 0.2s ease;
+    flex-shrink: 0;
   }
   .algo-collapsible[open] {
     border-color: #3b82f644;
@@ -262,9 +264,25 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     gap: 12px;
     border-top: 1px solid var(--border);
     background: #131317;
+    max-height: 280px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .algo-collapsible-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  .algo-collapsible-content::-webkit-scrollbar-track {
+    background: #141418;
+  }
+  .algo-collapsible-content::-webkit-scrollbar-thumb {
+    background: #353540;
+    border-radius: 3px;
+  }
+  .algo-collapsible-content::-webkit-scrollbar-thumb:hover {
+    background: #454554;
   }
 
-  .btn-row { display: flex; flex-direction: column; gap: 8px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); }
+  .btn-row { display: flex; flex-direction: column; gap: 8px; margin-top: 0; padding-top: 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
   button {
     padding: 11px 16px;
     border-radius: 8px;
@@ -343,6 +361,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     border-radius: 4px;
     line-height: 0;
     overflow: hidden;
+    flex-shrink: 0;
   }
   #canvas-container.mode-fit {
     cursor: zoom-in;
@@ -362,11 +381,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     -webkit-user-drag: none;
     display: none;
     z-index: 1;
-    image-rendering: auto;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: pixelated;
   }
   #preview-img {
-    max-width: calc(100vw - 380px);
-    max-height: calc(100vh - 80px);
+    max-width: 100%;
+    max-height: 100%;
     width: auto;
     height: auto;
     border-radius: 4px;
@@ -401,12 +421,35 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     display: block;
     z-index: 10;
   }
-  #viewport.brush-active {
-    cursor: none;
+  #viewport.brush-active,
+  #viewport.brush-active *,
+  #viewport.brush-active #canvas-container,
+  #viewport.brush-active #canvas-container.mode-fit,
+  #viewport.brush-active #canvas-container.mode-roi,
+  #viewport.brush-active #canvas-container.grabbing,
+  #viewport.brush-active #preview-img,
+  #viewport.brush-active #preview-img.mode-fit,
+  #viewport.brush-active #preview-img.mode-roi,
+  #viewport.brush-active #preview-img.grabbing,
+  #viewport.brush-active #pan-overview-img,
+  #viewport.brush-active #retouch-canvas,
+  #viewport.brush-active #retouch-canvas.active {
+    cursor: none !important;
+  }
+  #viewport.brush-active #canvas-container.space-pan,
+  #viewport.brush-active #canvas-container.space-pan * {
+    cursor: grab !important;
+  }
+  #viewport.brush-active #canvas-container.space-pan.grabbing,
+  #viewport.brush-active #canvas-container.space-pan.grabbing * {
+    cursor: grabbing !important;
+  }
+  #viewport.brush-active #retouch-canvas {
+    pointer-events: auto !important;
   }
   #retouch-canvas.active {
     pointer-events: auto;
-    cursor: none;
+    cursor: none !important;
   }
 
   #brush-cursor {
@@ -1079,6 +1122,167 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     box-sizing: border-box;
     text-align: center;
   }
+
+  /* Order Conflict Modal */
+  #order-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 10, 12, 0.88);
+    backdrop-filter: blur(12px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease-out;
+  }
+  .order-modal-card {
+    background: #18181c;
+    border: 1px solid #3f3f46;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+    border-radius: 14px;
+    padding: 28px 32px;
+    max-width: 660px;
+    width: 92%;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .order-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .order-warning-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+  #order-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+  #order-subtitle {
+    font-size: 12px;
+    color: #a1a1aa;
+    margin-top: 2px;
+  }
+  #order-desc {
+    font-size: 13px;
+    color: #d4d4d8;
+    line-height: 1.5;
+  }
+  .order-tables-container {
+    display: flex;
+    gap: 14px;
+  }
+  .order-table-box {
+    flex: 1;
+    background: #121215;
+    border: 1px solid #27272a;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .order-table-box.recommended {
+    border-color: #3b82f6;
+    background: #0f172a33;
+  }
+  .order-table-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text);
+  }
+  .badge-recommended {
+    background: #2563eb;
+    color: #fff;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .order-list {
+    max-height: 170px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .order-list::-webkit-scrollbar {
+    width: 5px;
+  }
+  .order-list::-webkit-scrollbar-thumb {
+    background: #353540;
+    border-radius: 3px;
+  }
+  .order-list-item {
+    font-size: 11px;
+    font-family: monospace;
+    padding: 5px 8px;
+    background: #18181e;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .order-item-name {
+    color: #e4e4e7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+  }
+  .order-item-time {
+    color: #93c5fd;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  .order-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .btn-order-primary {
+    flex: 1.3;
+    background: #2563eb;
+    color: #fff;
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s ease;
+  }
+  .btn-order-primary:hover {
+    background: #1d4ed8;
+  }
+  .btn-order-secondary {
+    flex: 1;
+    background: #27272a;
+    color: #e4e4e7;
+    border: 1px solid #3f3f46;
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn-order-secondary:hover {
+    background: #3f3f46;
+  }
 </style>
 </head>
 <body>
@@ -1334,6 +1538,40 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
 <div id="toast"></div>
 
+<div id="order-modal">
+  <div class="order-modal-card">
+    <div class="order-modal-header">
+      <div class="order-warning-icon">⚠️</div>
+      <div>
+        <div id="order-title">Photo Order Discrepancy Detected</div>
+        <div id="order-subtitle">Photo taken timestamps (EXIF) and filename sort order disagree</div>
+      </div>
+    </div>
+    <div id="order-desc">
+      Your photos appear to have been captured in a different order than their alphabetical filenames indicate. Stacking photos out of chronological sequence can cause alignment blur and double-image halos. How would you like to sequence the stack?
+    </div>
+    <div class="order-tables-container">
+      <div class="order-table-box recommended">
+        <div class="order-table-title">
+          <span>⏱️ EXIF Photo Taken Time</span>
+          <span class="badge-recommended">Recommended</span>
+        </div>
+        <div class="order-list" id="order-list-exif"></div>
+      </div>
+      <div class="order-table-box">
+        <div class="order-table-title">
+          <span>🔤 Filename Sort Order</span>
+        </div>
+        <div class="order-list" id="order-list-name"></div>
+      </div>
+    </div>
+    <div class="order-actions">
+      <button type="button" class="btn-order-primary" onclick="resolveOrderChoice('exif')">⏱️ Sort by Photo Taken Time (EXIF)</button>
+      <button type="button" class="btn-order-secondary" onclick="resolveOrderChoice('name')">🔤 Keep Filename Order</button>
+    </div>
+  </div>
+</div>
+
 <div id="render-modal">
   <div class="render-modal-card">
     <div class="render-spinner-ring"></div>
@@ -1430,6 +1668,15 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 const ZOOM_LEVELS = ['fit', '50%', '100%', '200%'];
 let isStandaloneMode = true;
 let isDevMode = false;
+let isClosingOrFinished = false;
+
+window.addEventListener('beforeunload', (e) => {
+  if (!isClosingOrFinished) {
+    e.preventDefault();
+    e.returnValue = 'Cancel focus stacking? Temporary files will be cleaned up.';
+    return e.returnValue;
+  }
+});
 let currentStackOrder = 'near_to_far';
 let currentViewMode = 'fit';
 let currentVisualMode = 'image'; // 'image' or 'depth'
@@ -1623,6 +1870,8 @@ function setViewMode(mode) {
     }
     updateMinimapBox();
   }
+  syncFitDimensions();
+  syncCanvasDimensions();
   fetchPreview();
 }
 
@@ -1693,13 +1942,13 @@ function showLoadingBadge(show) {
   const img = document.getElementById('preview-img');
   const oImg = document.getElementById('pan-overview-img');
   if (show) {
-    if (img && img.classList.contains('loaded')) {
-      img.style.filter = 'brightness(0.50) contrast(0.95)';
-      img.style.opacity = '0.70';
+    if (img && img.classList.contains('loaded') && img.style.display !== 'none') {
+      img.style.filter = 'brightness(0.92)';
+      img.style.opacity = '0.85';
     }
     if (oImg) {
-      oImg.style.filter = 'brightness(0.50) contrast(0.95)';
-      oImg.style.opacity = '0.70';
+      oImg.style.filter = 'none';
+      oImg.style.opacity = '1';
     }
   } else {
     if (img) {
@@ -1865,7 +2114,13 @@ function fetchPreview() {
         const rCanvas = document.getElementById('retouch-canvas');
         if (rCanvas) rCanvas.style.transform = '';
         const cCont = document.getElementById('canvas-container');
-        if (cCont) cCont.className = (currentViewMode !== 'fit' ? 'mode-roi' : 'mode-fit');
+        if (cCont) {
+          cCont.className = (currentViewMode !== 'fit' ? 'mode-roi' : 'mode-fit');
+          if (currentViewMode !== 'fit') {
+            cCont.style.width = '';
+            cCont.style.height = '';
+          }
+        }
         const oImg = document.getElementById('pan-overview-img');
         if (oImg) {
           oImg.style.transform = '';
@@ -1917,6 +2172,10 @@ function fetchPreview() {
     .catch(err => {
       if (err.name === 'AbortError') return;
       showLoadingBadge(false);
+      const pImg = document.getElementById('preview-img');
+      if (pImg) pImg.style.display = 'block';
+      const cCont = document.getElementById('canvas-container');
+      if (cCont) { cCont.style.width = ''; cCont.style.height = ''; }
       const loader = document.getElementById('viewport-loader');
       if (loader) loader.style.display = 'none';
       console.error("Preview error:", err);
@@ -1924,16 +2183,9 @@ function fetchPreview() {
     });
 }
 
-function syncCanvasDimensions() {
+function ensureMasterMaskInitialized() {
   const img = document.getElementById('preview-img');
-  const canvas = document.getElementById('retouch-canvas');
   if (!img || !img.naturalWidth) return;
-
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  canvas.style.width = img.offsetWidth + 'px';
-  canvas.style.height = img.offsetHeight + 'px';
-
   if (!masterMaskInitialized) {
     const aspect = img.naturalHeight / img.naturalWidth;
     masterMaskCanvas.width = 2400;
@@ -1941,6 +2193,70 @@ function syncCanvasDimensions() {
     masterMaskCtx.clearRect(0, 0, masterMaskCanvas.width, masterMaskCanvas.height);
     masterMaskInitialized = true;
   }
+}
+
+function syncFitDimensions() {
+  const img = document.getElementById('preview-img');
+  const cCont = document.getElementById('canvas-container');
+  const canvas = document.getElementById('retouch-canvas');
+  const vp = document.getElementById('viewport');
+  if (!img || !img.naturalWidth || !vp) return;
+
+  if (currentViewMode === 'fit') {
+    const vpW = Math.max(200, vp.clientWidth - 40);
+    const vpH = Math.max(200, vp.clientHeight - 40);
+    const natW = img.naturalWidth;
+    const natH = img.naturalHeight;
+    const scale = Math.min(vpW / natW, vpH / natH);
+    const fitW = Math.round(natW * scale);
+    const fitH = Math.round(natH * scale);
+
+    img.style.width = fitW + 'px';
+    img.style.height = fitH + 'px';
+    if (cCont) {
+      cCont.style.width = fitW + 'px';
+      cCont.style.height = fitH + 'px';
+    }
+    if (canvas) {
+      if (canvas.width !== natW) canvas.width = natW;
+      if (canvas.height !== natH) canvas.height = natH;
+      canvas.style.width = fitW + 'px';
+      canvas.style.height = fitH + 'px';
+    }
+  } else {
+    img.style.width = '';
+    img.style.height = '';
+    if (cCont) {
+      cCont.style.width = '';
+      cCont.style.height = '';
+    }
+    if (canvas) {
+      if (canvas.width !== img.naturalWidth) canvas.width = img.naturalWidth;
+      if (canvas.height !== img.naturalHeight) canvas.height = img.naturalHeight;
+      const cssW = (img.offsetWidth || img.naturalWidth);
+      const cssH = (img.offsetHeight || img.naturalHeight);
+      canvas.style.width = cssW ? cssW + 'px' : '100%';
+      canvas.style.height = cssH ? cssH + 'px' : '100%';
+    }
+  }
+}
+
+function syncCanvasDimensions() {
+  syncFitDimensions();
+  const img = document.getElementById('preview-img');
+  const canvas = document.getElementById('retouch-canvas');
+  if (!img || !img.naturalWidth) return;
+
+  if (currentViewMode !== 'fit') {
+    if (canvas.width !== img.naturalWidth) canvas.width = img.naturalWidth;
+    if (canvas.height !== img.naturalHeight) canvas.height = img.naturalHeight;
+    const cssW = (img.offsetWidth || img.naturalWidth);
+    const cssH = (img.offsetHeight || img.naturalHeight);
+    canvas.style.width = cssW ? cssW + 'px' : '100%';
+    canvas.style.height = cssH ? cssH + 'px' : '100%';
+  }
+
+  ensureMasterMaskInitialized();
   redrawRetouchCanvas();
 }
 
@@ -1960,6 +2276,7 @@ function toggleBrush() {
   if (cursor) cursor.style.display = 'none';
 
   if (isBrushActive) {
+    ensureMasterMaskInitialized();
     syncCanvasDimensions();
     prefetchFrameImage(currentFrameIdx);
     updateFrameLabel();
@@ -2134,6 +2451,9 @@ function updateBrushCursor(x, y) {
 }
 
 function getFrameCacheParams(frameIdx) {
+  if (currentViewMode === 'fit') {
+    return { key: `${frameIdx}_fit`, vw: 2400, vh: 1600 };
+  }
   const vp = document.getElementById('viewport');
   const vw = vp ? Math.max(400, Math.round(vp.clientWidth - 40)) : 1600;
   const vh = vp ? Math.max(300, Math.round(vp.clientHeight - 40)) : 1000;
@@ -2442,15 +2762,13 @@ function getCanvasCoords(e) {
 }
 
 function paintAtCoords(fx, fy, cssWidth) {
-  if (!masterMaskInitialized) {
-    syncCanvasDimensions();
-  }
+  ensureMasterMaskInitialized();
   const [rx, ry, rw, rh] = currentCropRect;
   const u = rx + fx * rw;
   const v = ry + fy * rh;
   const mx = u * masterMaskCanvas.width;
   const my = v * masterMaskCanvas.height;
-  const mRad = (brushRadius / cssWidth) * rw * masterMaskCanvas.width;
+  const mRad = (brushRadius / Math.max(1, cssWidth)) * rw * masterMaskCanvas.width;
 
   const solidRatio = Math.max(0, Math.min(0.999, 1.0 - (brushFeather / 100.0)));
 
@@ -2600,16 +2918,23 @@ retouchCanvas.addEventListener('mousedown', function(e) {
     return;
   }
   if (!isBrushActive || e.button !== 0) return;
-  isPainting = true;
-  strokeHistory.push(masterMaskCtx.getImageData(0, 0, masterMaskCanvas.width, masterMaskCanvas.height));
-  if (strokeHistory.length > 20) strokeHistory.shift();
-
-  const coords = getCanvasCoords(e);
-  lastPaintX = coords.fx;
-  lastPaintY = coords.fy;
-  paintAtCoords(coords.fx, coords.fy, coords.cssWidth);
-  redrawRetouchCanvas();
   e.preventDefault();
+  try {
+    ensureMasterMaskInitialized();
+    isPainting = true;
+    if (masterMaskCanvas.width > 0 && masterMaskCanvas.height > 0) {
+      strokeHistory.push(masterMaskCtx.getImageData(0, 0, masterMaskCanvas.width, masterMaskCanvas.height));
+      if (strokeHistory.length > 20) strokeHistory.shift();
+    }
+
+    const coords = getCanvasCoords(e);
+    lastPaintX = coords.fx;
+    lastPaintY = coords.fy;
+    paintAtCoords(coords.fx, coords.fy, coords.cssWidth);
+    redrawRetouchCanvas();
+  } catch (err) {
+    console.error("Mousedown painting error:", err);
+  }
 });
 
 window.addEventListener('mousemove', function(e) {
@@ -2621,8 +2946,12 @@ window.addEventListener('mousemove', function(e) {
     cursor.style.display = 'block';
   }
   updateBrushCursor(e.clientX, e.clientY);
-  const coords = getCanvasCoords(e);
-  paintInterpolated(coords.fx, coords.fy, coords.cssWidth);
+  try {
+    const coords = getCanvasCoords(e);
+    paintInterpolated(coords.fx, coords.fy, coords.cssWidth);
+  } catch (err) {
+    console.error("Mousemove painting error:", err);
+  }
 });
 
 window.addEventListener('mouseup', function(e) {
@@ -2712,9 +3041,32 @@ window.addEventListener('mouseup', function() {
   }
 });
 
+let resizeDebounceTimer = null;
 window.addEventListener('resize', function() {
+  syncFitDimensions();
   syncCanvasDimensions();
+  syncPanOverview();
+  updateMinimapBox();
+
+  clearTimeout(resizeDebounceTimer);
+  resizeDebounceTimer = setTimeout(function() {
+    if (currentViewMode !== 'fit') {
+      fetchPreview();
+    }
+  }, 120);
 });
+
+// Enable mouse-wheel scrolling over Advanced Algorithm Tuning panel
+const algoPaneEl = document.getElementById('grp-algo-collapsible');
+if (algoPaneEl) {
+  algoPaneEl.addEventListener('wheel', function(e) {
+    const content = algoPaneEl.querySelector('.algo-collapsible-content');
+    if (content && algoPaneEl.hasAttribute('open')) {
+      content.scrollTop += e.deltaY;
+      e.stopPropagation();
+    }
+  }, { passive: true });
+}
 
 // Interactive Pan / Drag handlers on Viewport when brush is not active (or spacebar is held)
 const previewImg = document.getElementById('preview-img');
@@ -2775,19 +3127,26 @@ window.addEventListener('mouseup', function(e) {
   const dy = e.clientY - dragStartY;
 
   if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-    // Keep low-res overview proxy at the new dragged offset while crop recalculates
-    // Subtle blur and slight fade clearly indicate a temporary low-res proxy
+    const dispW = pImg ? (pImg.offsetWidth || pImg.naturalWidth || (cCont ? cCont.offsetWidth : 800)) : 800;
+    const dispH = pImg ? (pImg.offsetHeight || pImg.naturalHeight || (cCont ? cCont.offsetHeight : 800)) : 800;
+
+    // Pin container size so hiding pImg doesn't collapse canvas-container to 0x0
+    if (cCont) {
+      cCont.style.width = dispW + 'px';
+      cCont.style.height = dispH + 'px';
+    }
+
+    // Keep low-res pixelated overview proxy at the new dragged offset while crop recalculates
     if (oImg) {
-      oImg.style.filter = 'brightness(0.50) contrast(0.95) blur(1.5px)';
-      oImg.style.opacity = '0.70';
+      oImg.style.display = 'block';
+      oImg.style.filter = 'none';
+      oImg.style.opacity = '1';
       // keep oImg.style.transform as `translate(${dx}px, ${dy}px)`!
     }
     if (pImg) {
       pImg.style.display = 'none'; // hide old high-res crop to prevent visual snap-back jitter
     }
 
-    const dispW = pImg ? (pImg.offsetWidth || pImg.naturalWidth || 800) : 800;
-    const dispH = pImg ? (pImg.offsetHeight || pImg.naturalHeight || 800) : 800;
     const [rx, ry, rw, rh] = currentCropRect;
     const fullW = dispW / (rw || 0.1);
     const fullH = dispH / (rh || 0.1);
@@ -2980,6 +3339,7 @@ let renderTimerInterval = null;
 
 function cancelStacking() {
   if (confirm("Cancel focus stacking? Temporary files will be cleaned up.")) {
+    isClosingOrFinished = true;
     fetch('/api/cancel', { method: 'POST', keepalive: true })
       .then(r => r.json())
       .then(data => {
@@ -3110,6 +3470,7 @@ async function triggerFinalRender() {
     }
 
     showToast("Render complete! Saved: " + (data.output_path || ""), 4000);
+    isClosingOrFinished = true;
 
     setTimeout(() => {
       try { window.close(); } catch(e) {}
@@ -3177,6 +3538,11 @@ function checkInitStatus() {
         return;
       }
 
+      if (data.has_order_conflict && data.order_conflict) {
+        showOrderConflictModal(data.order_conflict);
+        return;
+      }
+
       const progressBar = document.getElementById('init-progress-bar');
       const stageText = document.getElementById('init-stage');
       const pctText = document.getElementById('init-pct');
@@ -3205,6 +3571,73 @@ function checkInitStatus() {
       }
     })
     .catch(() => {});
+}
+
+let isOrderConflictModalVisible = false;
+
+function showOrderConflictModal(conflict) {
+  if (isOrderConflictModalVisible) return;
+  isOrderConflictModalVisible = true;
+
+  const modal = document.getElementById('order-modal');
+  const listExif = document.getElementById('order-list-exif');
+  const listName = document.getElementById('order-list-name');
+  const loader = document.getElementById('init-loader');
+  if (loader) loader.classList.add('hidden');
+
+  if (listExif && conflict.files_by_exif) {
+    listExif.innerHTML = conflict.files_by_exif.map((f, i) => `
+      <div class="order-list-item">
+        <span class="order-item-name" title="${escapeHtml(f.basename)}">${i + 1}. ${escapeHtml(f.basename)}</span>
+        <span class="order-item-time">${escapeHtml(f.timestamp || '')}</span>
+      </div>
+    `).join('');
+  }
+
+  if (listName && conflict.files_by_name) {
+    listName.innerHTML = conflict.files_by_name.map((f, i) => `
+      <div class="order-list-item">
+        <span class="order-item-name" title="${escapeHtml(f.basename)}">${i + 1}. ${escapeHtml(f.basename)}</span>
+        <span class="order-item-time" style="color:var(--muted);">${escapeHtml(f.timestamp || '')}</span>
+      </div>
+    `).join('');
+  }
+
+  if (modal) modal.style.display = 'flex';
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function resolveOrderChoice(choice) {
+  const modal = document.getElementById('order-modal');
+  if (modal) modal.style.display = 'none';
+  isOrderConflictModalVisible = false;
+
+  const loader = document.getElementById('init-loader');
+  if (loader) {
+    loader.classList.remove('hidden');
+    const stageEl = document.getElementById('init-stage');
+    const detailEl = document.getElementById('init-detail');
+    if (stageEl) stageEl.innerText = "Applying Order...";
+    if (detailEl) detailEl.innerText = choice === 'exif' ? "Sequencing frames by EXIF timestamp..." : "Sequencing frames by filename...";
+  }
+
+  fetch('/api/resolve_order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ order: choice })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (initPollTimer) clearInterval(initPollTimer);
+    initPollTimer = setInterval(checkInitStatus, 180);
+    checkInitStatus();
+  })
+  .catch(err => {
+    console.error("Order resolution error:", err);
+  });
 }
 
 // Drag and Drop & Folder/File Selection Handlers
@@ -3440,20 +3873,7 @@ def choose_save_dialog(window=None, default_path=None):
 
     return None
 
-def _start_stacking_worker(app_state, files):
-    on_load_fn = app_state.get('on_load_files_callback')
-    if not on_load_fn:
-        raise RuntimeError("No on_load_files_callback registered")
-
-    worker_fn, out_path = on_load_fn(files)
-    app_state['output_path'] = out_path
-    app_state['dropzone'] = False
-    app_state['ready'] = False
-    app_state['stage'] = 'Starting Stacking Engine'
-    app_state['detail'] = f'Discovered {len(files)} photos'
-    app_state['progress'] = 0.02
-    app_state['error'] = None
-
+def _start_worker_thread(app_state, worker_fn):
     def _run():
         def update_status(stage, detail, progress):
             app_state['stage'] = str(stage)
@@ -3477,7 +3897,7 @@ def _start_stacking_worker(app_state, files):
                 app_state['get_preview_fn'] = worker_res
             app_state['render_final_fn'] = render_fin
             app_state['stage'] = 'Ready'
-            app_state['detail'] = f'All {len(files)} frames aligned and pre-rendered'
+            app_state['detail'] = 'All frames aligned and pre-rendered'
             app_state['progress'] = 1.0
             app_state['ready'] = True
         except Exception as e:
@@ -3488,6 +3908,39 @@ def _start_stacking_worker(app_state, files):
             app_state['detail'] = str(e)
 
     threading.Thread(target=_run, daemon=True).start()
+
+def _start_stacking_worker(app_state, files):
+    on_load_fn = app_state.get('on_load_files_callback')
+    if not on_load_fn:
+        raise RuntimeError("No on_load_files_callback registered")
+
+    from cli import check_sort_order_discrepancy
+    disagree, files_by_name, files_by_exif, sort_details = check_sort_order_discrepancy(files)
+    if disagree:
+        app_state['dropzone'] = False
+        app_state['ready'] = False
+        app_state['has_order_conflict'] = True
+        app_state['order_conflict'] = sort_details
+        def _on_resolve(choice):
+            chosen = files_by_exif if choice == 'exif' else files_by_name
+            w_fn, out_p = on_load_fn(chosen)
+            app_state['output_path'] = out_p
+            return w_fn
+        app_state['on_resolve_order'] = _on_resolve
+        app_state['stage'] = 'Order Confirmation'
+        app_state['detail'] = 'Photo taken timestamps and filename order disagree'
+        return
+
+    worker_fn, out_path = on_load_fn(files)
+    app_state['output_path'] = out_path
+    app_state['dropzone'] = False
+    app_state['ready'] = False
+    app_state['stage'] = 'Starting Stacking Engine'
+    app_state['detail'] = f'Discovered {len(files)} photos'
+    app_state['progress'] = 0.02
+    app_state['error'] = None
+
+    _start_worker_thread(app_state, worker_fn)
 
 class ReusableHTTPServer(ThreadingHTTPServer):
     allow_reuse_address = True
@@ -3536,7 +3989,9 @@ class FocusStackRequestHandler(BaseHTTPRequestHandler):
                     "stage": self.app_state.get('stage', 'Initializing'),
                     "detail": self.app_state.get('detail', ''),
                     "progress": self.app_state.get('progress', 0.0),
-                    "error": self.app_state.get('error', None)
+                    "error": self.app_state.get('error', None),
+                    "has_order_conflict": self.app_state.get('has_order_conflict', False),
+                    "order_conflict": self.app_state.get('order_conflict', None)
                 })
                 self.wfile.write(res.encode("utf-8"))
             elif parsed.path == "/api/preview":
@@ -3720,6 +4175,7 @@ class FocusStackRequestHandler(BaseHTTPRequestHandler):
                     def _close_webview():
                         time.sleep(2.0)
                         try:
+                            self.app_state['window'].confirm_close = False
                             self.app_state['window'].destroy()
                         except Exception:
                             pass
@@ -3747,6 +4203,28 @@ class FocusStackRequestHandler(BaseHTTPRequestHandler):
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
                 self.wfile.write(json.dumps({"success": True, "save_path": chosen_path}).encode("utf-8"))
+            elif parsed.path == "/api/resolve_order":
+                length = int(self.headers.get('Content-Length', 0))
+                body = self.rfile.read(length) if length > 0 else b'{}'
+                params = json.loads(body.decode('utf-8'))
+                choice = params.get('order', 'exif')
+
+                self.app_state['has_order_conflict'] = False
+                self.app_state['order_conflict'] = None
+                self.app_state['stage'] = 'Starting Stacking Engine'
+                self.app_state['detail'] = f'Applying {"EXIF capture timestamp" if choice == "exif" else "filename"} order...'
+                self.app_state['progress'] = 0.02
+
+                on_resolve = self.app_state.get('on_resolve_order')
+                if on_resolve:
+                    worker_fn = on_resolve(choice)
+                    if worker_fn:
+                        _start_worker_thread(self.app_state, worker_fn)
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True, "choice": choice}).encode("utf-8"))
             elif parsed.path == "/api/load_files":
                 length = int(self.headers.get('Content-Length', 0))
                 body = self.rfile.read(length) if length > 0 else b'{}'
@@ -3862,6 +4340,7 @@ class FocusStackRequestHandler(BaseHTTPRequestHandler):
                     def _close_webview_cancel():
                         time.sleep(0.3)
                         try:
+                            self.app_state['window'].confirm_close = False
                             self.app_state['window'].destroy()
                         except Exception:
                             pass
@@ -3880,15 +4359,16 @@ class FocusStackRequestHandler(BaseHTTPRequestHandler):
             except Exception:
                 pass
 
-def run_interactive_server(worker_or_get_preview=None, render_final_fn=None, start_port=8765, is_dropzone=False, on_load_files_callback=None, is_lightroom=False, default_output_path=None):
+def run_interactive_server(worker_or_get_preview=None, render_final_fn=None, start_port=8765, is_dropzone=False, on_load_files_callback=None, is_lightroom=False, default_output_path=None, order_conflict=None, on_resolve_order=None):
+    has_conflict = bool(order_conflict and order_conflict.get('disagree'))
     server_state = {
         'dropzone': is_dropzone,
         'was_dropzone': is_dropzone,
         'standalone': not is_lightroom,
         'on_load_files_callback': on_load_files_callback,
         'ready': False,
-        'stage': 'Waiting for Photos' if is_dropzone else 'Initializing Stacking Engine',
-        'detail': 'Drop bracketed photos or select a folder' if is_dropzone else 'Preparing alignment...',
+        'stage': 'Order Confirmation' if has_conflict else ('Waiting for Photos' if is_dropzone else 'Initializing Stacking Engine'),
+        'detail': 'Photo taken timestamps and filename order disagree' if has_conflict else ('Drop bracketed photos or select a folder' if is_dropzone else 'Preparing alignment...'),
         'progress': 0.0,
         'error': None,
         'get_preview_fn': None,
@@ -3900,7 +4380,10 @@ def run_interactive_server(worker_or_get_preview=None, render_final_fn=None, sta
         'output_path': default_output_path,
         'cancelled': False,
         'window': None,
-        'server': None
+        'server': None,
+        'has_order_conflict': has_conflict,
+        'order_conflict': order_conflict if has_conflict else None,
+        'on_resolve_order': on_resolve_order
     }
 
     if is_dropzone:
@@ -3916,42 +4399,8 @@ def run_interactive_server(worker_or_get_preview=None, render_final_fn=None, sta
         server_state['render_final_fn'] = render_final_fn
         server_state['ready'] = True
         server_state['progress'] = 1.0
-    elif worker_or_get_preview is not None:
-        worker_fn = worker_or_get_preview
-        def _run_worker():
-            def update_status(stage, detail, progress):
-                server_state['stage'] = str(stage)
-                server_state['detail'] = str(detail)
-                server_state['progress'] = max(0.0, min(1.0, float(progress)))
-
-            def is_cancelled():
-                return server_state.get('cancelled', False)
-
-            try:
-                worker_res, render_fin = worker_fn(update_status, is_cancelled)
-                if is_cancelled():
-                    return
-                if isinstance(worker_res, tuple):
-                    get_prev, get_frm, num_frames, frame_names = worker_res
-                    server_state['get_preview_fn'] = get_prev
-                    server_state['get_frame_fn'] = get_frm
-                    server_state['num_frames'] = num_frames
-                    server_state['frame_names'] = frame_names
-                else:
-                    server_state['get_preview_fn'] = worker_res
-                server_state['render_final_fn'] = render_fin
-                server_state['stage'] = 'Ready'
-                server_state['detail'] = 'All frames aligned and pre-rendered'
-                server_state['progress'] = 1.0
-                server_state['ready'] = True
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                server_state['error'] = str(e)
-                server_state['stage'] = 'Processing Error'
-                server_state['detail'] = str(e)
-
-        threading.Thread(target=_run_worker, daemon=True).start()
+    elif worker_or_get_preview is not None and not has_conflict:
+        _start_worker_thread(server_state, worker_or_get_preview)
 
     # Signal any lingering orphaned FocusStack server from a previous run to shut down cleanly
     for p in range(start_port, start_port + 5):
@@ -4071,7 +4520,13 @@ def run_interactive_server(worker_or_get_preview=None, render_final_fn=None, sta
                 url=url,
                 width=1340,
                 height=880,
-                min_size=(960, 640)
+                min_size=(960, 640),
+                confirm_close=True,
+                localization={
+                    'global.quitConfirmation': 'Cancel focus stacking? Temporary files will be cleaned up.',
+                    'global.quit': 'Cancel Stacking',
+                    'global.cancel': 'Keep Working'
+                }
             )
             server_state['window'] = window
             window.events.closed += on_closed

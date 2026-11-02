@@ -9,23 +9,6 @@ local LrShell = import 'LrShell'
 
 local exportServiceProvider = {}
 
--- Locate the focus-stack binary automatically relative to the plugin folder
-local function getBinaryPath()
-    if _PLUGIN and _PLUGIN.path then
-        local bundled = LrPathUtils.child(_PLUGIN.path, "bin/focus-stack/focus-stack.app/Contents/MacOS/focus-stack")
-        if LrFileUtils.exists(bundled) then
-            return bundled
-        end
-    end
-    if LrFileUtils.exists("/usr/local/bin/focus-stack") then
-        return "/usr/local/bin/focus-stack"
-    end
-    if LrFileUtils.exists("/opt/homebrew/bin/focus-stack") then
-        return "/opt/homebrew/bin/focus-stack"
-    end
-    return nil
-end
-
 -- Locate python3 on the user system
 local function getPythonPath()
     if LrFileUtils.exists("/usr/bin/python3") then
@@ -142,12 +125,12 @@ exportServiceProvider.startDialog = function(propertyTable)
     propertyTable.LR_addToCatalog = false
     propertyTable.reimport_stackWithOriginal = false
 
-    if propertyTable.usePythonEngine == nil then
-        propertyTable.usePythonEngine = true
-    end
-
     if propertyTable.interactiveMode == nil then
         propertyTable.interactiveMode = true
+    end
+
+    if propertyTable.bgMode == nil then
+        propertyTable.bgMode = "auto"
     end
 
     if propertyTable.outputSuffix == nil then
@@ -161,26 +144,6 @@ exportServiceProvider.startDialog = function(propertyTable)
     if propertyTable.deleteIntermediates == nil then
         propertyTable.deleteIntermediates = true
     end
-
-    if propertyTable.batchSize == nil then
-        propertyTable.batchSize = "8"
-    end
-
-    if propertyTable.fullResolutionAlign == nil then
-        propertyTable.fullResolutionAlign = true
-    end
-
-    if propertyTable.globalAlign == nil then
-        propertyTable.globalAlign = true
-    end
-
-    if propertyTable.preserveExposure == nil then
-        propertyTable.preserveExposure = true
-    end
-
-    if propertyTable.bgMode == nil then
-        propertyTable.bgMode = "auto"
-    end
 end
 
 -- Custom UI section in Lightroom's Export dialog
@@ -191,18 +154,6 @@ exportServiceProvider.sectionsForTopOfDialog = function(f, propertyTable)
     return {
         {
             title = "Open Focus Stacking Settings",
-
-            f:row {
-                f:static_text {
-                    title = "Stacking Engine:",
-                    alignment = 'right',
-                    width = share 'label_width',
-                },
-                f:checkbox {
-                    title = "16-Bit Pro Multi-Channel Engine (Zero Banding, ICC Preserved, No Halos)",
-                    value = bind 'usePythonEngine',
-                },
-            },
 
             f:row {
                 f:static_text {
@@ -230,7 +181,6 @@ exportServiceProvider.sectionsForTopOfDialog = function(f, propertyTable)
                         { title = "Bright (White / High-Key)", value = "bright" },
                         { title = "Energy (Contrast / Foliage)", value = "energy" },
                     },
-                    enabled = bind 'usePythonEngine',
                 },
             },
 
@@ -246,61 +196,6 @@ exportServiceProvider.sectionsForTopOfDialog = function(f, propertyTable)
                 },
                 f:static_text {
                     title = " (e.g. photo123_stacked.tif)",
-                    text_color = LrColor(0.5, 0.5, 0.5),
-                },
-            },
-
-            f:row {
-                f:static_text {
-                    title = "Alignment Quality:",
-                    alignment = 'right',
-                    width = share 'label_width',
-                },
-                f:checkbox {
-                    title = "Full-resolution alignment (Legacy C++ engine only)",
-                    value = bind 'fullResolutionAlign',
-                    enabled = bind { key = 'usePythonEngine', transform = function(v) return not v end },
-                },
-            },
-
-            f:row {
-                f:static_text {
-                    title = "",
-                    width = share 'label_width',
-                },
-                f:checkbox {
-                    title = "Global alignment (Legacy C++ engine only)",
-                    value = bind 'globalAlign',
-                    enabled = bind { key = 'usePythonEngine', transform = function(v) return not v end },
-                },
-            },
-
-            f:row {
-                f:static_text {
-                    title = "Exposure & Color:",
-                    alignment = 'right',
-                    width = share 'label_width',
-                },
-                f:checkbox {
-                    title = "Preserve manual flash exposure (Legacy C++ engine only)",
-                    value = bind 'preserveExposure',
-                    enabled = bind { key = 'usePythonEngine', transform = function(v) return not v end },
-                },
-            },
-
-            f:row {
-                f:static_text {
-                    title = "Batch Size:",
-                    alignment = 'right',
-                    width = share 'label_width',
-                },
-                f:edit_field {
-                    value = bind 'batchSize',
-                    width_in_chars = 8,
-                    enabled = bind { key = 'usePythonEngine', transform = function(v) return not v end },
-                },
-                f:static_text {
-                    title = " (RAM saving setting; Legacy C++ engine only)",
                     text_color = LrColor(0.5, 0.5, 0.5),
                 },
             },
@@ -513,168 +408,104 @@ exportServiceProvider.processRenderedPhotos = function(functionContext, exportCo
     end
 
     local venvPy, cliPy = getPythonEnginePaths()
-    local usePython = (exportParams.usePythonEngine ~= false) and (venvPy ~= nil) and (cliPy ~= nil)
+    if not venvPy or not cliPy then
+        progressScope:done()
+        LrDialogs.message(
+            "Open Focus Stack Not Ready",
+            "Could not locate the Python stacking engine inside the plugin bundle.\nPlease ensure ./setup.sh was run to initialize FocusStack.lrplugin/bin/venv.",
+            "critical"
+        )
+        return
+    end
 
-    if usePython then
-        local isInteractive = (exportParams.interactiveMode ~= false)
+    local isInteractive = (exportParams.interactiveMode ~= false)
 
-        progressScope:setPortionComplete(0.55)
-        if isInteractive then
-            progressScope:setCaption("Opening Interactive Preview window...")
-        else
-            progressScope:setCaption("Computing 16-bit multi-channel stack on " .. #renderedPaths .. " frames (~30-60s)...")
+    progressScope:setPortionComplete(0.55)
+    if isInteractive then
+        progressScope:setCaption("Opening Interactive Preview window...")
+    else
+        progressScope:setCaption("Computing 16-bit multi-channel stack on " .. #renderedPaths .. " frames (~30-60s)...")
+    end
+
+    local flags = { "--output=\"" .. outputPath .. "\"" }
+    if isInteractive then
+        table.insert(flags, "--interactive")
+    end
+    if exportParams.bgMode then
+        table.insert(flags, "--bg-mode=" .. tostring(exportParams.bgMode))
+    end
+    table.insert(flags, "--crop")
+    table.insert(flags, "--lightroom")
+
+    -- Create temporary script inside the scratch folder
+    local scriptFile, err = io.open(scriptPath, "w")
+    if not scriptFile then
+        LrDialogs.message("Error", "Could not create execution script: " .. tostring(err), "critical")
+        return
+    end
+
+    scriptFile:write("#!/bin/bash\n")
+    scriptFile:write("export FOCUS_STACK_LIGHTROOM=1\n")
+    scriptFile:write("\"" .. venvPy .. "\" \"" .. cliPy .. "\"")
+    for _, flag in ipairs(flags) do
+        scriptFile:write(" " .. flag)
+    end
+    for _, path in ipairs(renderedPaths) do
+        scriptFile:write(" \"" .. path .. "\"")
+    end
+    scriptFile:write(" > \"" .. logPath .. "\" 2>&1\n")
+    scriptFile:close()
+
+    LrTasks.execute("/bin/chmod +x \"" .. scriptPath .. "\"")
+    local exitCode = LrTasks.execute("\"" .. scriptPath .. "\"")
+    LrFileUtils.delete(scriptPath)
+
+    if not LrFileUtils.exists(outputPath) then
+        local stem = LrPathUtils.removeExtension(outputPath)
+        local altTif = stem .. ".tif"
+        local altJpg = stem .. ".jpg"
+        if LrFileUtils.exists(altJpg) then
+            outputPath = altJpg
+        elseif LrFileUtils.exists(altTif) then
+            outputPath = altTif
         end
+    end
 
-        local flags = { "--output=\"" .. outputPath .. "\"" }
-        if isInteractive then
-            table.insert(flags, "--interactive")
-        end
-        if exportParams.bgMode then
-            table.insert(flags, "--bg-mode=" .. tostring(exportParams.bgMode))
-        end
-        table.insert(flags, "--crop")
-        table.insert(flags, "--lightroom")
-
-        -- Create temporary script inside the scratch folder
-        local scriptFile, err = io.open(scriptPath, "w")
-        if not scriptFile then
-            LrDialogs.message("Error", "Could not create execution script: " .. tostring(err), "critical")
-            return
-        end
-
-        scriptFile:write("#!/bin/bash\n")
-        scriptFile:write("export FOCUS_STACK_LIGHTROOM=1\n")
-        scriptFile:write("\"" .. venvPy .. "\" \"" .. cliPy .. "\"")
-        for _, flag in ipairs(flags) do
-            scriptFile:write(" " .. flag)
-        end
-        for _, path in ipairs(renderedPaths) do
-            scriptFile:write(" \"" .. path .. "\"")
-        end
-        scriptFile:write(" > \"" .. logPath .. "\" 2>&1\n")
-        scriptFile:close()
-
-        LrTasks.execute("/bin/chmod +x \"" .. scriptPath .. "\"")
-        local exitCode = LrTasks.execute("\"" .. scriptPath .. "\"")
-        LrFileUtils.delete(scriptPath)
-
-        if not LrFileUtils.exists(outputPath) then
-            local stem = LrPathUtils.removeExtension(outputPath)
-            local altTif = stem .. ".tif"
-            local altJpg = stem .. ".jpg"
-            if LrFileUtils.exists(altJpg) then
-                outputPath = altJpg
-            elseif LrFileUtils.exists(altTif) then
-                outputPath = altTif
+    if exitCode ~= 0 or not LrFileUtils.exists(outputPath) then
+        if exitCode == 2 or exitCode == 512 then
+            -- Stacking was cancelled by the user in the interactive preview UI
+            if LrFileUtils.exists(logPath) then
+                LrFileUtils.delete(logPath)
             end
-        end
-
-        if exitCode ~= 0 or not LrFileUtils.exists(outputPath) then
-            if exitCode == 2 or exitCode == 512 then
-                -- Stacking was cancelled by the user in the interactive preview UI
-                if LrFileUtils.exists(logPath) then
-                    LrFileUtils.delete(logPath)
-                end
-                if exportParams.deleteIntermediates ~= false then
-                    if isSubfolder then
-                        LrFileUtils.delete(renditionFolder)
-                    else
-                        for _, path in ipairs(renderedPaths) do
-                            LrFileUtils.delete(path)
-                        end
+            if exportParams.deleteIntermediates ~= false then
+                if isSubfolder then
+                    LrFileUtils.delete(renditionFolder)
+                else
+                    for _, path in ipairs(renderedPaths) do
+                        LrFileUtils.delete(path)
                     end
                 end
-                return
             end
-
-            local logContent = ""
-            if LrFileUtils.exists(logPath) then
-                local f = io.open(logPath, "r")
-                if f then
-                    logContent = f:read("*a")
-                    f:close()
-                end
-            end
-            if #logContent > 1000 then
-                logContent = string.sub(logContent, #logContent - 1000)
-            end
-            LrDialogs.message(
-                "Focus Stacking Failed",
-                "16-bit stacking process exited with status code " .. tostring(exitCode) .. ".\n\nDetails:\n" .. logContent,
-                "critical"
-            )
-            return
-        end
-    else
-        -- Fallback to legacy focus-stack C++ binary
-        local binary = getBinaryPath()
-        if not binary then
-            LrDialogs.message(
-                "focus-stack Not Found",
-                "Could not locate the focus-stack binary inside the plugin bundle.\nPlease ensure FocusStack.lrplugin/bin is intact.",
-                "critical"
-            )
             return
         end
 
-        local batchSize = exportParams.batchSize or "8"
-        local flags = { "--no-opencl" }
-
-        if exportParams.fullResolutionAlign ~= false then
-            table.insert(flags, "--full-resolution-align")
-        end
-
-        if exportParams.globalAlign ~= false then
-            table.insert(flags, "--global-align")
-        end
-
-        if exportParams.preserveExposure ~= false then
-            table.insert(flags, "--no-contrast")
-            table.insert(flags, "--no-whitebalance")
-        end
-
-        table.insert(flags, "--batchsize=" .. tostring(batchSize))
-        table.insert(flags, "--output=\"" .. outputPath .. "\"")
-
-        local scriptFile, err = io.open(scriptPath, "w")
-        if not scriptFile then
-            LrDialogs.message("Error", "Could not create execution script: " .. tostring(err), "critical")
-            return
-        end
-
-        scriptFile:write("#!/bin/bash\n")
-        scriptFile:write("\"" .. binary .. "\"")
-        for _, flag in ipairs(flags) do
-            scriptFile:write(" " .. flag)
-        end
-        for _, path in ipairs(renderedPaths) do
-            scriptFile:write(" \"" .. path .. "\"")
-        end
-        scriptFile:write(" > \"" .. logPath .. "\" 2>&1\n")
-        scriptFile:close()
-
-        LrTasks.execute("/bin/chmod +x \"" .. scriptPath .. "\"")
-        local exitCode = LrTasks.execute("\"" .. scriptPath .. "\"")
-        LrFileUtils.delete(scriptPath)
-
-        if exitCode ~= 0 or not LrFileUtils.exists(outputPath) then
-            local logContent = ""
-            if LrFileUtils.exists(logPath) then
-                local f = io.open(logPath, "r")
-                if f then
-                    logContent = f:read("*a")
-                    f:close()
-                end
+        local logContent = ""
+        if LrFileUtils.exists(logPath) then
+            local f = io.open(logPath, "r")
+            if f then
+                logContent = f:read("*a")
+                f:close()
             end
-            if #logContent > 1000 then
-                logContent = string.sub(logContent, #logContent - 1000)
-            end
-            LrDialogs.message(
-                "Focus Stacking Failed",
-                "focus-stack process exited with status code " .. tostring(exitCode) .. ".\n\nDetails:\n" .. logContent,
-                "critical"
-            )
         end
+        if #logContent > 1000 then
+            logContent = string.sub(logContent, #logContent - 1000)
+        end
+        LrDialogs.message(
+            "Focus Stacking Failed",
+            "16-bit stacking process exited with status code " .. tostring(exitCode) .. ".\n\nDetails:\n" .. logContent,
+            "critical"
+        )
+        return
     end
 
     -- Clean up log file on success
